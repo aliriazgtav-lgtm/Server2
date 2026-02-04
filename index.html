@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assetto Corsa - The Ultimate Racing Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        :root {
+            --racing-red: #ff2d2d;
+            --asphalt: #1a1a1a;
+            --tire-smoke: #f0f0f0;
+        }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        .font-racing {
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(20,20,20,0.8) 50%, rgba(40,0,0,0.9) 100%);
+        }
+        
+        .tire-mark {
+            position: absolute;
+            width: 200px;
+            height: 20px;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.1) 10px,
+                rgba(255,255,255,0.1) 20px
+            );
+            transform: rotate(-5deg);
+            opacity: 0.3;
+        }
+        
+        .speed-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ff2d2d, transparent);
+            animation: speedMove 3s linear infinite;
+        }
+        
+        @keyframes speedMove {
+            0% { transform: translateX(-100%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateX(100vw); opacity: 0; }
+        }
+        
+        .car-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        
+        .car-card:hover {
+            transform: translateY(-10px) rotateX(5deg);
+            box-shadow: 0 20px 40px rgba(255,45,45,0.3);
+        }
+        
+        .track-preview {
+            clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+            transition: clip-path 0.5s ease;
+        }
+        
+        .track-preview:hover {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+        }
+        
+        .rpm-gauge {
+            background: conic-gradient(from 180deg, #22c55e 0deg, #eab308 90deg, #ef4444 180deg);
+            border-radius: 50%;
+            padding: 4px;
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .text-scramble {
+            display: inline-block;
+        }
+        
+        .grid-bg {
+            background-image: 
+                linear-gradient(rgba(255,45,45,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,45,45,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        
+        .parallax-layer {
+            will-change: transform;
+        }
+        
+        .neon-glow {
+            text-shadow: 0 0 10px rgba(255,45,45,0.8), 0 0 20px rgba(255,45,45,0.4);
+        }
+        
+        .asphalt-texture {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 glass-panel border-b border-white/10 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center space-x-2">
+                    <div class="w-10 h-10 bg-red-600 rounded-sm transform skew-x-[-10deg] flex items-center justify-center">
+                        <span class="font-racing font-bold text-xl text-white transform skew-x-[10deg]">AC</span>
+                    </div>
+                    <span class="font-racing text-2xl font-bold tracking-wider text-white">ASSETTO CORSA</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#features" class="text-gray-300 hover:text-red-500 transition-colors font-medium tracking-wide">FEATURES</a>
+                    <a href="#cars" class="text-gray-300 hover:text-red-500 transition-colors font-medium tracking-wide">CARS</a>
+                    <a href="#tracks" class="text-gray-300 hover:text-red-500 transition-colors font-medium tracking-wide">TRACKS</a>
+                    <a href="#mods" class="text-gray-300 hover:text-red-500 transition-colors font-medium tracking-wide">MODS</a>
+                    <a href="#competizione" class="text-gray-300 hover:text-red-500 transition-colors font-medium tracking-wide">COMPETIZIONE</a>
+                </div>
+                <button class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-sm font-racing font-bold transform skew-x-[-10deg] transition-all hover:scale-105">
+                    <span class="transform skew-x-[10deg] inline-block">BUY NOW</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative h-screen flex items-center justify-center overflow-hidden asphalt-texture">
+        <!-- Animated Background Elements -->
+        <div class="absolute inset-0 hero-gradient z-0"></div>
+        <div class="absolute inset-0 grid-bg opacity-30 z-0"></div>
+        
+        <!-- Speed Lines -->
+        <div class="speed-line top-1/4 w-96" style="animation-delay: 0s;"></div>
+        <div class="speed-line top-1/3 w-64" style="animation-delay: 1s;"></div>
+        <div class="speed-line top-2/3 w-80" style="animation-delay: 2s;"></div>
+        
+        <!-- Tire Marks -->
+        <div class="tire-mark top-20 left-10"></div>
+        <div class="tire-mark top-40 right-20"></div>
+        <div class="tire-mark bottom-32 left-1/4"></div>
+
+        <div class="relative z-10 text-center px-4 max-w-6xl mx-auto">
+            <div class="mb-6 overflow-hidden">
+                <h1 class="font-racing text-6xl md:text-8xl lg:text-9xl font-black text-white leading-none tracking-tighter transform translate-y-full opacity-0" id="hero-title">
+                    ASSETTO <span class="text-red-600 neon-glow">CORSA</span>
+                </h1>
+            </div>
+            <p class="text-xl md:text-3xl text-gray-300 font-light tracking-widest mb-4 opacity-0 transform translate-y-10" id="hero-subtitle">
+                PRECISION. PHYSICS. PASSION.
+            </p>
+            <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-12 opacity-0" id="hero-desc">
+                The ultimate racing simulator featuring laser-scanned tracks, officially licensed cars, and the most realistic driving physics ever created.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center opacity-0" id="hero-cta">
+                <button class="group relative px-8 py-4 bg-red-600 overflow-hidden rounded-sm transform skew-x-[-10deg] hover:bg-red-700 transition-all duration-300">
+                    <span class="relative z-10 font-racing font-bold text-lg transform skew-x-[10deg] inline-block group-hover:translate-x-2 transition-transform">
+                        START ENGINE →
+                    </span>
+                    <div class="absolute inset-0 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left skew-x-[10deg] opacity-20"></div>
+                </button>
+                <button class="px-8 py-4 border-2 border-white/30 hover:border-red-600 rounded-sm font-racing font-bold transform skew-x-[-10deg] transition-all hover:bg-white/5">
+                    <span class="transform skew-x-[10deg] inline-block">WATCH TRAILER</span>
+                </button>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto opacity-0" id="hero-stats">
+                <div class="text-center">
+                    <div class="font-racing text-3xl md:text-4xl font-bold text-red-500">178+</div>
+                    <div class="text-sm text-gray-400 tracking-wider">CARS</div>
+                </div>
+                <div class="text-center">
+                    <div class="font-racing text-3xl md:text-4xl font-bold text-red-500">19</div>
+                    <div class="text-sm text-gray-400 tracking-wider">TRACKS</div>
+                </div>
+                <div class="text-center">
+                    <div class="font-racing text-3xl md:text-4xl font-bold text-red-500">100%</div>
+                    <div class="text-sm text-gray-400 tracking-wider">LASER SCANNED</div>
+                </div>
+                <div class="text-center">
+                    <div class="font-racing text-3xl md:text-4xl font-bold text-red-500">∞</div>
+                    <div class="text-sm text-gray-400 tracking-wider">MODS</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <div class="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center pt-2">
+                <div class="w-1 h-2 bg-red-600 rounded-full animate-pulse"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-32 relative bg-zinc-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20">
+                <h2 class="font-racing text-5xl md:text-6xl font-bold mb-6">
+                    BEYOND <span class="text-red-600">REALISM</span>
+                </h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+                    Developed by racing drivers for racing drivers, featuring advanced physics engine and precision engineering.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="glass-panel p-8 rounded-lg group hover:bg-white/5 transition-all duration-500 feature-card">
+                    <div class="w-16 h-16 bg-red-600/20 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-racing text-2xl font-bold mb-4">Advanced Physics</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        Proprietary physics engine simulating every aspect of vehicle dynamics, tire wear, aerodynamics, and suspension behavior in real-time.
+                    </p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="glass-panel p-8 rounded-lg group hover:bg-white/5 transition-all duration-500 feature-card">
+                    <div class="w-16 h-16 bg-red-600/20 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-racing text-2xl font-bold mb-4">Laser Scanned Tracks</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        Millimeter-precision reproductions of legendary circuits including Nürburgring Nordschleife, Spa-Francorchamps, and Monza.
+                    </p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="glass-panel p-8 rounded-lg group hover:bg-white/5 transition-all duration-500 feature-card">
+                    <div class="w-16 h-16 bg-red-600/20 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-racing text-2xl font-bold mb-4">Full Mod Support</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        Extensive modding capabilities allowing community-created cars, tracks, and total conversions. Endless content possibilities.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Technical Specs -->
+            <div class="mt-24 glass-panel rounded-2xl p-8 md:p-12">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="font-racing text-3xl font-bold mb-6">TECHNICAL EXCELLENCE</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                                <span class="text-gray-400">Physics Engine</span>
+                                <span class="font-racing text-red-500">Proprietary AC Engine</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                                <span class="text-gray-400">Track Accuracy</span>
+                                <span class="font-racing text-red-500">±2mm Laser Scanning</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                                <span class="text-gray-400">Tire Model</span>
+                                <span class="font-racing text-red-500">Pacejka Magic Formula</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                                <span class="text-gray-400">Aerodynamics</span>
+                                <span class="font-racing text-red-500">CFD Simulation Data</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                                <span class="text-gray-400">VR Support</span>
+                                <span class="font-racing text-red-500">Full Oculus/OpenVR</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative h-64 md:h-full min-h-[300px] bg-gradient-to-br from-red-900/20 to-black rounded-lg overflow-hidden">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="rpm-gauge w-48 h-48 flex items-center justify-center">
+                                <div class="w-40 h-40 bg-zinc-900 rounded-full flex items-center justify-center">
+                                    <div class="text-center">
+                                        <div class="font-racing text-4xl font-bold text-white">9000</div>
+                                        <div class="text-xs text-gray-400">RPM</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cars Showcase -->
+    <section id="cars" class="py-32 relative bg-black overflow-hidden">
+        <div class="absolute inset-0 opacity-20">
+            <div class="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-16">
+                <div>
+                    <h2 class="font-racing text-5xl md:text-6xl font-bold mb-4">
+                        LEGENDARY <span class="text-red-600">MACHINES</span>
+                    </h2>
+                    <p class="text-gray-400 text-lg">From classic road cars to prototype racers</p>
+                </div>
+                <div class="flex gap-4 mt-6 md:mt-0">
+                    <button class="px-6 py-2 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-all font-racing rounded-sm">ROAD</button>
+                    <button class="px-6 py-2 border border-white/30 hover:border-red-600 hover:text-red-600 transition-all font-racing rounded-sm">RACE</button>
+                    <button class="px-6 py-2 border border-white/30 hover:border-red-600 hover:text-red-600 transition-all font-racing rounded-sm">PROTOTYPE</button>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Car 1 -->
+                <div class="car-card glass-panel rounded-xl overflow-hidden group cursor-pointer">
+                    <div class="h-64 bg-gradient-to-b from-gray-800 to-black relative overflow-hidden">
+                        <div class="absolute inset-0 bg-red-600/10 group-hover:bg-red-600/20 transition-all"></div>
+                        <div class="absolute bottom-4 left-4 right-4">
+                            <div class="font-racing text-3xl font-bold text-white mb-1">FERRARI F2004</div>
+                            <div class="text-red-500 text-sm tracking-widest">FORMULA 1 • 2004</div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-3 gap-4 text-center mb-4">
+                            <div>
+                                <div class="text-xs text-gray-500 mb-1">POWER</div>
+                                <div class="font-racing text-lg font-bold">900 HP</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 mb-1">WEIGHT</div>
+                                <div class="font-racing text-lg font-bold">605 KG</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 mb-1">0-100</div>
+                                <div class="font-racing text-lg font-bold">2.1s</div>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-800 h-1 rounded-full overflow-hidden">
+                            <div class="bg-red-600 h-full w-[95%]"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 mt-2">
+                            <span>Handling</span>
+                            <span>95%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Car 2 -->
+                <div class="car-card glass-panel rounded-xl overflow-hidden group cursor-pointer">
+                    <div class="h-64 bg-gradient-to-b from-gray-800 to-black relative overflow-hidden">
+                        <div class="absolute inset-0 bg-blue-600/10 group-hover:bg-blue-600/20 transition-all"></div>
+                        <div class="absolute bottom-4 left-4 right-4">
+                            <div class="font-racing text-3xl font-bold text-white mb-1">PORSCHE 911 GT3</div>
+                            <div class="text-blue-500 text-sm tracking-widest">GT3 R • 2016</div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-3 gap-4 text-center mb-4">
+                            <div>
+                                <div class="text-xs text-gray-500 mb-1">POWER</div>
+                                <div class="font-racing text-lg font-bold">500 HP</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 mb-1">WEIGHT</div>
+                                <div class="font-racing text-lg font-bold">1,220 KG</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 mb-1">0-100</div>
+                                <div class="font-racing text-lg font-bold">3.2s</div>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-800 h-1 rounded-full overflow-hidden">
+                            <div class="bg-blue-600 h-full w-[88%]"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 mt-2">
+                            <span>Handling</span>
+                            <span>88%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Car 3 -->
+                <div class="car-card glass-panel rounded-xl overflow-hidden group cursor-pointer">
+                    <div class="h-64 bg-gradient-to-b from-gray-800 to-black relative overflow-hidden">
+                        <div class="absolute inset-0 bg-yellow-600/10 group-hover:bg-yellow-600/20 transition-all"></div>
+                        <div class="absolute bottom-4 left-4 right-4">
+                            <div class="font-racing text-3xl font-bold text-white mb-1">LAMBORGHINI SVJ</div>
+                            <div class="text-yellow-500 text-sm tracking-widest">AVENTADOR • 2019</div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-3 gap-4 text-center mb-4">
+                            <div>
+                                <div class="text-xs text-gray-500 mb-1">POWER</div>
+                                <div class="font-racing text-lg font-bold">770 HP</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 mb-1">WEIGHT</div>
+                                <div class="font-racing text-lg font-bold">1,525 KG</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 mb-1">0-100</div>
+                                <div class="font-racing text-lg font-bold">2.8s</div>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-800 h-1 rounded-full overflow-hidden">
+                            <div class="bg-yellow-600 h-full w-[85%]"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 mt-2">
+                            <span>Handling</span>
+                            <span>85%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12 text-center">
+                <button class="px-8 py-3 border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-all font-racing font-bold rounded-sm">
+                    VIEW ALL 178+ CARS
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tracks Section -->
+    <section id="tracks" class="py-32 relative bg-zinc-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="font-racing text-5xl md:text-6xl font-bold mb-4">
+                    ICONIC <span class="text-red-600">CIRCUITS</span>
+                </h2>
+                <p class="text-gray-400 text-lg">Laser-scanned perfection from around the globe</p>
+            </div>
+
+            <div class="space-y-8">
+                <!-- Track 1 -->
+                <div class="group relative overflow-hidden rounded-2xl glass-panel hover:scale-[1.02] transition-transform duration-500 cursor-pointer">
+                    <div class="grid md:grid-cols-2">
+                        <div class="track-preview h-80 bg-gradient-to-r from-green-900/40 to-black relative p-8 flex flex-col justify-end">
+                            <div class="absolute top-6 left-6 bg-red-600 text-white px-3 py-1 text-xs font-bold rounded">LEGENDARY</div>
+                            <h3 class="font-racing text-4xl font-bold mb-2">NÜRBURGRING</h3>
+                            <p class="text-gray-300 mb-4">Nordschleife • 20.8km • 154 Turns</p>
+                            <div class="flex gap-4 text-sm text-gray-400">
+                                <span class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                    Difficulty: Extreme
+                                </span>
+                                <span>•</span>
+                                <span>Germany</span>
+                            </div>
+                        </div>
+                        <div class="p-8 flex items-center">
+                            <div>
+                                <p class="text-gray-300 leading-relaxed mb-6">
+                                    The Green Hell. The most challenging and demanding race track in the world, reproduced with millimeter-perfect accuracy using the latest laser-scanning technology.
+                                </p>
+                                <div class="grid grid-cols-3 gap-4 mb-6">
+                                    <div class="text-center p-3 bg-black/30 rounded">
+                                        <div class="font-racing text-xl font-bold text-red-500">20.8km</div>
+                                        <div class="text-xs text-gray-500">Length</div>
+                                    </div>
+                                    <div class="text-center p-3 bg-black/30 rounded">
+                                        <div class="font-racing text-xl font-bold text-red-500">300m</div>
+                                        <div class="text-xs text-gray-500">Elevation</div>
+                                    </div>
+                                    <div class="text-center p-3 bg-black/30 rounded">
+                                        <div class="font-racing text-xl font-bold text-red-500">154</div>
+                                        <div class="text-xs text-gray-500">Turns</div>
+                                    </div>
+                                </div>
+                                <button class="text-red-500 font-racing font-bold hover:text-red-400 transition-colors flex items-center gap-2">
+                                    VIEW TRACK DETAILS →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Track 2 -->
+                <div class="group relative overflow-hidden rounded-2xl glass-panel hover:scale-[1.02] transition-transform duration-500 cursor-pointer">
+                    <div class="grid md:grid-cols-2">
+                        <div class="p-8 flex items-center order-2 md:order-1">
+                            <div>
+                                <p class="text-gray-300 leading-relaxed mb-6">
+                                    Home of the Belgian Grand Prix. Famous for the Eau Rouge-Raidillon complex, a steep uphill section that demands absolute commitment and precision.
+                                </p>
+                                <div class="grid grid-cols-3 gap-4 mb-6">
+                                    <div class="text-center p-3 bg-black/30 rounded">
+                                        <div class="font-racing text-xl font-bold text-red-500">7.0km</div>
+                                        <div class="text-xs text-gray-500">Length</div>
+                                    </div>
+                                    <div class="text-center p-3 bg-black/30 rounded">
+                                        <div class="font-racing text-xl font-bold text-red-500">20</div>
+                                        <div class="text-xs text-gray-500">Turns</div>
+                                    </div>
+                                    <div class="text-center p-3 bg-black/30 rounded">
+                                        <div class="font-racing text-xl font-bold text-red-500">F1</div>
+                                        <div class="text-xs text-gray-500">Grade</div>
+                                    </div>
+                                </div>
+                                <button class="text-red-500 font-racing font-bold hover:text-red-400 transition-colors flex items-center gap-2">
+                                    VIEW TRACK DETAILS →
+                                </button>
+                            </div>
+                        </div>
+                        <div class="track-preview h-80 bg-gradient-to-l from-purple-900/40 to-black relative p-8 flex flex-col justify-end order-1 md:order-2" style="clip-path: polygon(15% 0, 100% 0, 100% 100%, 0% 100%);">
+                            <div class="absolute top-6 right-6 bg-purple-600 text-white px-3 py-1 text-xs font-bold rounded">F1 CIRCUIT</div>
+                            <h3 class="font-racing text-4xl font-bold mb-2 text-right">SPA-FRANCORCHAMPS</h3>
+                            <p class="text-gray-300 mb-4 text-right">Belgium • 7.0km • 20 Turns</p>
+                            <div class="flex gap-4 text-sm text-gray-400 justify-end">
+                                <span>Belgium</span>
+                                <span>•</span>
+                                <span class="flex items-center gap-1">
+                                    Difficulty: High
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mods Section -->
+    <section id="mods" class="py-32 relative bg-black overflow-hidden">
+        <div class="absolute inset-0 grid-bg opacity-20"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid md:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="font-racing text-5xl md:text-6xl font-bold mb-6">
+                        INFINITE <span class="text-red-600">POSSIBILITIES</span>
+                    </h2>
+                    <p class="text-gray-300 text-lg mb-8 leading-relaxed">
+                        Assetto Corsa's thriving modding community has created thousands of high-quality cars and tracks. From classic F1 machines to modern hypercars, from fictional drift tracks to real-world hill climbs.
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-red-600/20 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-racing text-xl font-bold mb-2">Content Manager</h4>
+                                <p class="text-gray-400">Advanced launcher with mod management, custom shaders, and enhanced graphics settings.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-red-600/20 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-racing text-xl font-bold mb-2">CSP & SOL</h4>
+                                <p class="text-gray-400">Custom Shaders Patch and SOL weather engine bring photorealistic lighting and weather.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-red-600/20 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-racing text-xl font-bold mb-2">Online Racing</h4>
+                                <p class="text-gray-400">Join thousands of players on SimRacingSystem, LFM, and private leagues.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="mt-10 px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-racing font-bold rounded-sm transition-all hover:scale-105 transform skew-x-[-10deg]">
+                        <span class="transform skew-x-[10deg] inline-block">EXPLORE MODS</span>
+                    </button>
+                </div>
+                
+                <div class="relative">
+                    <div class="absolute inset-0 bg-gradient-to-r from-red-600/20 to-purple-600/20 rounded-2xl blur-3xl"></div>
+                    <div class="relative glass-panel rounded-2xl p-8 space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer group">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-blue-600 rounded flex items-center justify-center font-racing font-bold">RSS</div>
+                                <div>
+                                    <div class="font-bold">RSS Formula Hybrid</div>
+                                    <div class="text-sm text-gray-400">Modern F1 Car • 5.0★</div>
+                                </div>
+                            </div>
+                            <div class="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">→</div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer group">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-green-600 rounded flex items-center justify-center font-racing font-bold">VRC</div>
+                                <div>
+                                    <div class="font-bold">VRC Formula Alpha</div>
+                                    <div class="text-sm text-gray-400">Open Wheel • 4.9★</div>
+                                </div>
+                            </div>
+                            <div class="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">→</div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer group">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-yellow-600 rounded flex items-center justify-center font-racing font-bold">IL</div>
+                                <div>
+                                    <div class="font-bold">Imola Circuit</div>
+                                    <div class="text-sm text-gray-400">Track • 5.0★</div>
+                                </div>
+                            </div>
+                            <div class="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">→</div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer group">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-purple-600 rounded flex items-center justify-center font-racing font-bold">SH</div>
+                                <div>
+                                    <div class="font-bold">Shutoko Revival</div>
+                                    <div class="text-sm text-gray-400">Street Racing • 4.8★</div>
+                                </div>
+                            </div>
+                            <div class="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">→</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Competizione Section -->
+    <section id="competizione" class="py-32 relative bg-zinc-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="glass-panel rounded-3xl overflow-hidden">
+                <div class="grid md:grid-cols-2">
+                    <div class="p-12 md:p-16 flex flex-col justify-center">
+                        <div class="inline-block px-4 py-1 bg-red-600/20 text-red-500 rounded-full text-sm font-bold mb-6 w-fit">OFFICIAL SEQUEL</div>
+                        <h2 class="font-racing text-4xl md:text-5xl font-bold mb-6">
+                            ASSETTO CORSA<br>
+                            <span class="text-red-600">COMPETIZIONE</span>
+                        </h2>
+                        <p class="text-gray-300 text-lg mb-8 leading-relaxed">
+                            The official GT World Challenge game. Blancpain GT Series licensed content, featuring GT3 and GT4 machinery with focus on esports and competitive racing.
+                        </p>
+                        
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-center gap-3 text-gray-300">
+                                <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                Official GT World Challenge License
+                            </li>
+                            <li class="flex items-center gap-3 text-gray-300">
+                                <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                Advanced Multiplayer Ranking
+                            </li>
+                            <li class="flex items-center gap-3 text-gray-300">
+                                <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                Professional Esports Integration
+                            </li>
+                            <li class="flex items-center gap-3 text-gray-300">
+                                <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                Unreal Engine 4 Graphics
+                            </li>
+                        </ul>
+                        
+                        <div class="flex gap-4">
+                            <button class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-racing font-bold rounded-sm transition-all">
+                                LEARN MORE
+                            </button>
+                            <button class="px-6 py-3 border border-white/30 hover:border-white text-white font-racing font-bold rounded-sm transition-all">
+                                BUY ACC
+                            </button>
+                        </div>
+                    </div>
+                    <div class="relative h-96 md:h-auto bg-gradient-to-br from-red-900/40 to-black flex items-center justify-center overflow-hidden">
+                        <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z\' fill=\'%23ffffff\' fill-opacity=\'0.05\' fill-rule=\'evenodd\'/%3E%3C/svg%3E')] opacity-30"></div>
+                        <div class="text-center z-10">
+                            <div class="font-racing text-8xl font-black text-white/10 mb-4">ACC</div>
+                            <div class="text-red-500 font-racing text-2xl font-bold">GT3 CHAMPIONSHIP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black border-t border-white/10 py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-12 mb-12">
+                <div>
+                    <div class="flex items-center space-x-2 mb-6">
+                        <div class="w-8 h-8 bg-red-600 rounded-sm transform skew-x-[-10deg] flex items-center justify-center">
+                            <span class="font-racing font-bold text-sm text-white transform skew-x-[10deg]">AC</span>
+                        </div>
+                        <span class="font-racing text-xl font-bold tracking-wider">ASSETTO CORSA</span>
+                    </div>
+                    <p class="text-gray-500 text-sm leading-relaxed">
+                        The ultimate racing simulator developed by Kunos Simulazioni. Precision physics, laser-scanned tracks, and endless modding possibilities.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="font-racing font-bold text-lg mb-6 text-white">GAME</h4>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-red-500 transition-colors">Features</a></li>
+                        <li><a href="#" class="hover:text-red-500 transition-colors">Cars</a></li>
+                        <li><a href="#" class="hover:text-red-500 transition-colors">Tracks</a></li>
+                        <li><a href="#" class="hover:text-red-500 transition-colors">DLC</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-racing font-bold text-lg mb-6 text-white">COMMUNITY</h4>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-red-500 transition-colors">Forums</a></li>
+                        <li><a href="#" class="hover:text-red-500 transition-colors">Mods</a></li>
+                        <li><a href="#" class="hover:text-red-500 transition-colors">Esports</a></li>
+                        <li><a href="#" class="hover:text-red-500 transition-colors">Discord</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-racing font-bold text-lg mb-6 text-white">SUPPORT</h4>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-red-500 transition-colors">Help Center</a></li>
+                        <li><a href="#" class="hover:text-red-500 transition-colors">System Requirements</a></li>
+                        <li><a href="#" class="hover:text-red-500 transition-colors">Contact</a></li>
+                        <li><a href="#" class="hover:text-red-500 transition-colors">Server Status</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="text-gray-600 text-sm">
+                    © 2024 Kunos Simulazioni. All rights reserved.
